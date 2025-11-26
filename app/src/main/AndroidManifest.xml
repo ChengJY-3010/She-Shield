@@ -12,19 +12,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GrpAssignment">
         <activity
-            android:name=".MainActivity5"
+            android:name=".log_in_page"
             android:exported="false" />
         <activity
             android:name=".MainActivity4"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity3"
+            android:exported="true" />
+        <activity
+            android:name=".MainActivity"
             android:exported="true" />
         <activity
             android:name=".MainActivity2"
-            android:exported="true" />
-        <activity
-            android:name=".MainActivity3"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".MainActivity5"
             android:exported="true" />
         <activity
             android:name=".post_report"

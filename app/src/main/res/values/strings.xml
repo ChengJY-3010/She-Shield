@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">app_name</string>
+
+    <!-- String array for the Incident Type Spinner -->
+    <string-array name="incident_types">
+        <item>Select Incident Type</item>
+        <item>Harassment</item>
+        <item>Unsafe Area</item>
+        <item>Suspicious Activity</item>
+        <item>Poor Lighting</item>
+        <item>Others</item>
+    </string-array>
 </resources>
