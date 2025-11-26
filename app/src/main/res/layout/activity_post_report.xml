@@ -8,6 +8,12 @@
     tools:context=".MainActivity2">
 
     <!-- Toolbar -->
+    <TextView
+        android:id="@+id/textView13"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="git pull origin master --allow-unrelated-histories&#xA;" />
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
