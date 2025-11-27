@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-11-25T07:28:33.258529300Z">
+        <DropdownSelection timestamp="2025-11-27T08:27:07.012848300Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HPVictus\.android\avd\Pixel_9.avd" />
+              <DeviceId pluginId="Default" identifier="serial=emulator-5554;connection=1fab1873" />
             </handle>
           </Target>
         </DropdownSelection>

@@ -124,21 +124,48 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <androidx.cardview.widget.CardView
-                android:layout_width="360dp"
-                android:layout_height="250dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginRight="9dp"
-                app:cardCornerRadius="20dp">
 
-                <ImageView
-                    android:id="@+id/imageView25"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:cardCornerRadius="20dp"
-                    app:srcCompat="@drawable/whatsapp_image_2025_11_24_at_11_36_13_pm" />
+            <!-- ================================================== -->
+            <!-- MOVED UP: Location Section (Map Preview)           -->
+            <!-- ================================================== -->
+            <TextView
+                android:id="@+id/textView11"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="10dp"
+                android:text="Location"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- Map Preview Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="340dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="15dp">
+
+                <!-- NOTE: You can change this back to ImageView if you prefer the static image -->
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/map_preview_fragment"
+                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <!-- Transparent view to block scrolling interaction -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@android:color/transparent"/>
             </androidx.cardview.widget.CardView>
 
+            <!-- ================================================== -->
+            <!-- MOVED DOWN: Type of Incident (Dropdown)            -->
+            <!-- ================================================== -->
             <TextView
                 android:id="@+id/textView10"
                 android:layout_width="match_parent"
@@ -149,7 +176,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- START: Dropdown for selecting Incident Type -->
+            <!-- Dropdown for selecting Incident Type -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -168,59 +195,6 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp" />
 
-            </androidx.cardview.widget.CardView>
-            <!-- END: Dropdown for selecting Incident Type -->
-
-            <!-- Location -->
-
-            <TextView
-                android:id="@+id/textView11"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
-                android:layout_marginTop="10dp"
-                android:text="Location"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="340dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginBottom="10dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <EditText
-                        android:id="@+id/edit_location"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_weight="1"
-                        android:background="@android:color/transparent"
-                        android:hint="Enter location or use current location"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:textColorHint="#9CA3AF"
-                        android:textSize="14sp" />
-
-                    <ImageView
-                        android:id="@+id/btn_current_location"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:padding="8dp"
-                        app:srcCompat="@drawable/image_removebg_preview__34_"
-                        app:tint="#7C3AED" />
-                </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <!-- Date & Time -->
@@ -538,30 +512,24 @@
                         android:id="@+id/switch_anonymous"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="true" />
+                        android:thumbTint="#6B21A8"
+                        android:trackTint="#D8B4FE" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/submit_report_button"
-                android:layout_width="340dp"
-                android:layout_height="50dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginBottom="150dp"
-                android:clickable="true"
-                app:cardBackgroundColor="#6B21A8"
-                app:cardCornerRadius="20dp">
-
-                <TextView
-                    android:id="@+id/textView18"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Submit Report"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_gravity="center" />
-            </androidx.cardview.widget.CardView>
+            <!-- SUBMIT BUTTON -->
+            <Button
+                android:id="@+id/btn_submit_report"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginHorizontal="15dp"
+                android:layout_marginBottom="30dp"
+                android:backgroundTint="#6B21A8"
+                android:text="Post Incident"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
 
         </LinearLayout>

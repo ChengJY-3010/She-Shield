@@ -4,6 +4,9 @@
 
     <!-- Add INTERNET permission for Google Sign-In and any network operations -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
 
     <application
         android:allowBackup="true"
@@ -19,6 +22,9 @@
         <!-- NEW LOGIN ACTIVITY: SET AS THE LAUNCHER -->
         <!-- This activity will start when the user taps the app icon. -->
         <!-- Ensure your Java file is named LogInPage.java -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyANdSyLeMuZHxsje79phAzG5IRz0CzpKjI" />
         <activity
             android:name=".LogInPage"
             android:exported="true">
@@ -45,17 +51,11 @@
             android:name=".MainActivity5"
             android:exported="true" />
 
-        <!-- The original LAUNCHER activity. It is no longer the starting screen. -->
         <activity
-            android:name=".post_report"
-            android:exported="true">
-            <!-- Removed LAUNCHER filter here:
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            -->
-        </activity>
+            android:name=".PostReportActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity2" />
+
 
         <meta-data
             android:name="preloaded_fonts"

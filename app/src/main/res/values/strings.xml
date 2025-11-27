@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">app_name</string>
+    <string name="report_here">Report Here</string>
 
     <!-- String array for the Incident Type Spinner -->
     <string-array name="incident_types">
@@ -9,6 +10,9 @@
         <item>Unsafe Area</item>
         <item>Suspicious Activity</item>
         <item>Poor Lighting</item>
+        <item>Verbal Abuse</item>
+        <item>Physical Assault</item>
+        <item>Stalking</item>
         <item>Others</item>
     </string-array>
 </resources>
