@@ -17,10 +17,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GrpAssignment">
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyANdSyLeMuZHxsje79phAzG5IRz0CzpKjI" />
-
         <!-- The Login Page is the main entry point for the app -->
         <activity
             android:name=".LogInPage"
@@ -41,6 +37,11 @@
         <!-- This activity is still needed for posting a report -->
         <activity
             android:name=".PostReportActivity"
+            android:exported="false" />
+
+        <!-- Activity for viewing report details -->
+        <activity
+            android:name=".ReportDetailActivity"
             android:exported="false" />
 
         <meta-data

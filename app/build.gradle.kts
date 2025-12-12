@@ -48,13 +48,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    // 1. Google Sign-In (Resolves GoogleSignIn, GoogleSignInClient, etc. errors)
+
+    // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.3.0")
-// 2. Material Design Components (Resolves TextInputEditText errors)
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
-    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // OSMDroid for OpenStreetMap
     implementation("org.osmdroid:osmdroid-android:6.1.20")
-    // Firebase Connection
+
+    // Firebase Firestore
     implementation("com.google.firebase:firebase-firestore:26.0.2")
 }
