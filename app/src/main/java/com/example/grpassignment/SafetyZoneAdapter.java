@@ -3,12 +3,13 @@ package com.example.grpassignment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-// NOTE: We are not importing any GeoPoint class to avoid ambiguity.
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,6 @@ import java.util.Locale;
 public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.ViewHolder> {
 
     private List<SafetyZone> list = new ArrayList<>();
-    // 1. Be explicit: Use the fully qualified name for the osmdroid GeoPoint.
     private org.osmdroid.util.GeoPoint userLocation;
 
     public void setData(List<SafetyZone> newList) {
@@ -25,7 +25,6 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
         notifyDataSetChanged();
     }
 
-    // 2. Be explicit: Use the fully qualified name for the osmdroid GeoPoint here as well.
     public void setUserLocation(org.osmdroid.util.GeoPoint location) {
         this.userLocation = location;
         notifyDataSetChanged();
@@ -42,12 +41,10 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         SafetyZone zone = list.get(position);
+
         holder.tvName.setText(zone.name);
 
         if (userLocation != null && zone.geolocation != null) {
-            // Here, zone.geolocation is known to be com.google.firebase.firestore.GeoPoint from the SafetyZone class.
-
-            // 3. Explicitly create a new osmdroid GeoPoint for the calculation.
             org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
                     zone.geolocation.getLatitude(),
                     zone.geolocation.getLongitude()
@@ -72,6 +69,16 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
         } else {
             holder.tvIs24hr.setText("Limited");
         }
+
+        // --- LOAD IMAGE WITH GLIDE ---
+        if (zone.imageUrl != null && !zone.imageUrl.isEmpty()) {
+            Glide.with(holder.itemView.getContext())
+                    .load(zone.imageUrl)
+                    .placeholder(android.R.drawable.ic_menu_gallery) // Placeholder while loading
+                    .error(android.R.drawable.ic_dialog_alert) // Image to show if URL is invalid
+                    .into(holder.iconType);
+        }
+        // --------------------------
     }
 
     @Override
@@ -82,6 +89,7 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
     class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView tvName, tvDistance, tvIs24hr;
+        ImageView iconType;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -89,6 +97,7 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
             tvName = itemView.findViewById(R.id.tvName);
             tvDistance = itemView.findViewById(R.id.tvDistance);
             tvIs24hr = itemView.findViewById(R.id.tvIs24hr);
+            iconType = itemView.findViewById(R.id.iconType);
         }
     }
 }

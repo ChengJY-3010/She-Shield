@@ -30,6 +30,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    packagingOptions {
+        resources.excludes.add("/META-INF/{AL2.0,LGPL2.1}")
+    }
 }
 
 dependencies {
@@ -42,6 +45,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
     implementation(libs.recyclerview)
@@ -57,4 +61,13 @@ dependencies {
 
     // Firebase Firestore
     implementation("com.google.firebase:firebase-firestore:26.0.2")
+
+    // --- Add Glide for image loading ---
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    // --------------------------------
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.espresso.core)
 }
