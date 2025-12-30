@@ -1,21 +1,21 @@
 package com.example.grpassignment;
 
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.Exclude;
 
 public class SafetyZone {
+
     public String name;
+    public GeoPoint geolocation;
+    public boolean is24hour;
     public String type;
     public String phone;
-    public boolean is24hour;
-    public GeoPoint geolocation;   // Store latitude + longitude as a single GeoPoint
 
-    public SafetyZone() {} // Required by Firestore
+    // This field will not be read from or saved to Firestore.
+    // We will use it to store the calculated distance for sorting.
+    @Exclude
+    public double distanceToUser;
 
-    public SafetyZone(String name, String type, String phone, boolean is24hour, GeoPoint geolocation) {
-        this.name = name;
-        this.type = type;
-        this.phone = phone;
-        this.is24hour = is24hour;
-        this.geolocation = geolocation;
-    }
+    public SafetyZone() {}
+
 }
