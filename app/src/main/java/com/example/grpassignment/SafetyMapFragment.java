@@ -29,15 +29,13 @@ import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class SafetyMapFragment extends Fragment {
+public class SafetyMapFragment extends Fragment implements SafetyZoneAdapter.OnItemClickListener {
 
     private MapView mapPreview;
     private FrameLayout mapPreviewContainer;
@@ -95,7 +93,8 @@ public class SafetyMapFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerSafetyZones);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new SafetyZoneAdapter();
+        // Pass `this` fragment as the click listener to the adapter
+        adapter = new SafetyZoneAdapter(this);
         recyclerView.setAdapter(adapter);
 
         loadDataFromFirestore();
@@ -122,7 +121,6 @@ public class SafetyMapFragment extends Fragment {
                         }
                     }
                     isDataLoaded = true;
-                    // Once data is loaded, try to sort and display.
                     calculateAndSortDistances();
                 })
                 .addOnFailureListener(e -> Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
@@ -144,39 +142,29 @@ public class SafetyMapFragment extends Fragment {
             if (mapPreview != null) {
                 mapPreview.getController().setCenter(currentUserLocation);
             }
-            // Once location is available, try to sort and display.
             calculateAndSortDistances();
         });
     }
 
-    // This method now handles both calculating and sorting.
     private void calculateAndSortDistances() {
-        // Only proceed if both data and location are ready.
-        if (!isDataLoaded || !isLocationAvailable) {
-            return;
-        }
+        if (!isDataLoaded || !isLocationAvailable) return;
 
-        // Calculate distance for each zone in the master list
         for (SafetyZone zone : allSafetyZones) {
             if (zone.geolocation != null) {
                 org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
-                        zone.geolocation.getLatitude(), 
+                        zone.geolocation.getLatitude(),
                         zone.geolocation.getLongitude()
                 );
                 zone.distanceToUser = currentUserLocation.distanceToAsDouble(zonePoint);
             }
         }
 
-        // Sort the entire master list by the calculated distance
         Collections.sort(allSafetyZones, Comparator.comparingDouble(z -> z.distanceToUser));
-
-        // Now that the master list is sorted, apply the current filter and update the adapter
         filterAndDisplay(currentFilterType);
     }
 
     private void filterAndDisplay(String type) {
-        currentFilterType = type; // Remember the last selected filter
-
+        currentFilterType = type;
         List<SafetyZone> filteredList = new ArrayList<>();
         if (type.equalsIgnoreCase("All")) {
             filteredList.addAll(allSafetyZones);
@@ -187,7 +175,6 @@ public class SafetyMapFragment extends Fragment {
                 }
             }
         }
-        // Update the adapter with the filtered (and pre-sorted) list
         adapter.setData(filteredList);
         adapter.setUserLocation(currentUserLocation);
     }
@@ -209,5 +196,14 @@ public class SafetyMapFragment extends Fragment {
     public void onPause() {
         super.onPause();
         if (mapPreview != null) mapPreview.onPause();
+    }
+
+    // The click event from the adapter is handled here
+    @Override
+    public void onItemClick(SafetyZone zone) {
+        Bundle args = new Bundle();
+        args.putParcelable("safetyZone", zone);
+        // Use Navigation Component to go to the detail fragment
+        Navigation.findNavController(requireView()).navigate(R.id.action_nav_map_to_safetyZoneDetailFragment, args);
     }
 }

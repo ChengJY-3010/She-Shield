@@ -19,6 +19,17 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
 
     private List<SafetyZone> list = new ArrayList<>();
     private org.osmdroid.util.GeoPoint userLocation;
+    private OnItemClickListener listener; // Listener for item clicks
+
+    // Interface for click events
+    public interface OnItemClickListener {
+        void onItemClick(SafetyZone zone);
+    }
+
+    // Constructor to accept the listener
+    public SafetyZoneAdapter(OnItemClickListener listener) {
+        this.listener = listener;
+    }
 
     public void setData(List<SafetyZone> newList) {
         this.list = newList;
@@ -41,44 +52,7 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         SafetyZone zone = list.get(position);
-
-        holder.tvName.setText(zone.name);
-
-        if (userLocation != null && zone.geolocation != null) {
-            org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
-                    zone.geolocation.getLatitude(),
-                    zone.geolocation.getLongitude()
-            );
-
-            double distanceInMeters = userLocation.distanceToAsDouble(zonePoint);
-
-            String distanceText;
-            if (distanceInMeters < 1000) {
-                distanceText = String.format(Locale.US, "📍 %.0f m", distanceInMeters);
-            } else {
-                double distanceInKm = distanceInMeters / 1000.0;
-                distanceText = String.format(Locale.US, "📍 %.1f km", distanceInKm);
-            }
-            holder.tvDistance.setText(distanceText);
-        } else {
-            holder.tvDistance.setText("📍 Calculating…");
-        }
-
-        if (zone.is24hour) {
-            holder.tvIs24hr.setText("24/7");
-        } else {
-            holder.tvIs24hr.setText("Limited");
-        }
-
-        // --- LOAD IMAGE WITH GLIDE ---
-        if (zone.imageUrl != null && !zone.imageUrl.isEmpty()) {
-            Glide.with(holder.itemView.getContext())
-                    .load(zone.imageUrl)
-                    .placeholder(android.R.drawable.ic_menu_gallery) // Placeholder while loading
-                    .error(android.R.drawable.ic_dialog_alert) // Image to show if URL is invalid
-                    .into(holder.iconType);
-        }
-        // --------------------------
+        holder.bind(zone, listener);
     }
 
     @Override
@@ -93,11 +67,37 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-
             tvName = itemView.findViewById(R.id.tvName);
             tvDistance = itemView.findViewById(R.id.tvDistance);
             tvIs24hr = itemView.findViewById(R.id.tvIs24hr);
             iconType = itemView.findViewById(R.id.iconType);
+        }
+
+        public void bind(final SafetyZone zone, final OnItemClickListener listener) {
+            tvName.setText(zone.name);
+
+            if (userLocation != null && zone.geolocation != null) {
+                org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
+                        zone.geolocation.getLatitude(),
+                        zone.geolocation.getLongitude()
+                );
+                double distanceInMeters = userLocation.distanceToAsDouble(zonePoint);
+                String distanceText = distanceInMeters < 1000 ?
+                        String.format(Locale.US, "📍 %.0f m", distanceInMeters) :
+                        String.format(Locale.US, "📍 %.1f km", distanceInMeters / 1000.0);
+                tvDistance.setText(distanceText);
+            } else {
+                tvDistance.setText("📍 Calculating…");
+            }
+
+            tvIs24hr.setText(zone.is24hour ? "24/7" : "Limited");
+
+            if (zone.imageUrl != null && !zone.imageUrl.isEmpty()) {
+                Glide.with(itemView.getContext()).load(zone.imageUrl).into(iconType);
+            }
+
+            // Set the click listener on the entire item view
+            itemView.setOnClickListener(v -> listener.onItemClick(zone));
         }
     }
 }
