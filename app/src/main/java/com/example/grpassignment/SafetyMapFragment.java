@@ -29,11 +29,12 @@ import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class SafetyMapFragment extends Fragment {
@@ -44,14 +45,19 @@ public class SafetyMapFragment extends Fragment {
     private GeoPoint currentUserLocation;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
+    private RecyclerView recyclerView;
+    private SafetyZoneAdapter adapter;
+    private final List<SafetyZone> allSafetyZones = new ArrayList<>();
+    private boolean isDataLoaded = false;
+    private boolean isLocationAvailable = false;
+    private String currentFilterType = "All";
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // OSM Droid configuration
         Context ctx = requireContext().getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
-        // Initialize location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
     }
 
@@ -61,85 +67,66 @@ public class SafetyMapFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_safety_map, container, false);
 
         mapPreviewContainer = view.findViewById(R.id.map_preview_container);
-
         mapPreview = new MapView(requireContext());
         mapPreview.setClickable(false);
         mapPreview.setMultiTouchControls(false);
         mapPreview.setFlingEnabled(false);
         mapPreview.getController().setZoom(15.0);
-
         mapPreviewContainer.addView(mapPreview);
 
-        // Fetch location to center the preview
         fetchCurrentLocationAndCenterPreview();
 
         return view;
     }
 
-@Override
-public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-    CardView BtnCat = view.findViewById(R.id.map_preview_parent_container);
-
-    // Listener merged with argument passing
-    View.OnClickListener OCLCat = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
+        CardView mapCard = view.findViewById(R.id.map_preview_parent_container);
+        mapCard.setOnClickListener(v -> {
             Bundle args = new Bundle();
-
-            // Pass Lat & Lng if exist
             if (currentUserLocation != null) {
                 args.putDouble("latitude", currentUserLocation.getLatitude());
                 args.putDouble("longitude", currentUserLocation.getLongitude());
             }
+            Navigation.findNavController(v).navigate(R.id.action_nav_map_to_fullScreenMapFragment, args);
+        });
 
-            // Navigate with Safe Arguments
-            Navigation.findNavController(v)
-                    .navigate(R.id.action_nav_map_to_fullScreenMapFragment, args);
-        }
-    };
+        recyclerView = view.findViewById(R.id.recyclerSafetyZones);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new SafetyZoneAdapter();
+        recyclerView.setAdapter(adapter);
 
-    BtnCat.setOnClickListener(OCLCat);
+        loadDataFromFirestore();
 
-    // Card List (Verified Safety Zones Near You)
-    RecyclerView recyclerView = view.findViewById(R.id.recyclerSafetyZones);
-    recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        CardView filterAll = view.findViewById(R.id.filter_all);
+        CardView filterShelters = view.findViewById(R.id.filter_shelters);
+        CardView filterLegal = view.findViewById(R.id.filter_legal);
+        CardView filterCounseling = view.findViewById(R.id.filter_counseling);
 
-    SafetyZoneAdapter adapter = new SafetyZoneAdapter();
-    recyclerView.setAdapter(adapter);
+        filterAll.setOnClickListener(v -> filterAndDisplay("All"));
+        filterShelters.setOnClickListener(v -> filterAndDisplay("Shelter"));
+        filterLegal.setOnClickListener(v -> filterAndDisplay("Legal Aid"));
+        filterCounseling.setOnClickListener(v -> filterAndDisplay("Counseling"));
+    }
 
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-    // Load Safety Zones from Firestore
-    db.collection("safety_zones_pin")
-            .get()
-            .addOnSuccessListener(query -> {
-                List<SafetyZone> zones = new ArrayList<>();
-                for (DocumentSnapshot doc : query) {
-                    SafetyZone z = doc.toObject(SafetyZone.class);
-                    zones.add(z);
-                }
-
-                adapter.setData(zones);
-            })
-            .addOnFailureListener(e -> {
-                Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            });
-}
-
-
-    /*SAMPLE
-    * ImageButton BtnDog = view.findViewById(R.id.BtnDog);
-        View.OnClickListener OCLDog = new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-                Navigation.findNavController(view).navigate(R.id.NextToDog);
-            }
-        };
-        BtnDog.setOnClickListener(OCLDog);
-    * */
+    private void loadDataFromFirestore() {
+        FirebaseFirestore.getInstance().collection("safety_zones_pin").get()
+                .addOnSuccessListener(query -> {
+                    allSafetyZones.clear();
+                    for (DocumentSnapshot doc : query) {
+                        SafetyZone z = doc.toObject(SafetyZone.class);
+                        if (z != null) {
+                            allSafetyZones.add(z);
+                        }
+                    }
+                    isDataLoaded = true;
+                    // Once data is loaded, try to sort and display.
+                    calculateAndSortDistances();
+                })
+                .addOnFailureListener(e -> Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
 
     private void fetchCurrentLocationAndCenterPreview() {
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -151,25 +138,62 @@ public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceStat
             if (location != null) {
                 currentUserLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
             } else {
-                // Default to KL if location is unavailable
                 currentUserLocation = new GeoPoint(3.1390, 101.6869);
             }
+            isLocationAvailable = true;
             if (mapPreview != null) {
                 mapPreview.getController().setCenter(currentUserLocation);
             }
-
-            // Add overlay to show and track current location
-            MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(
-                    new GpsMyLocationProvider(requireContext()), mapPreview);
-            myLocationOverlay.enableMyLocation();
-            myLocationOverlay.enableFollowLocation(); // Auto-center on movement
-            mapPreview.getOverlays().add(myLocationOverlay);
+            // Once location is available, try to sort and display.
+            calculateAndSortDistances();
         });
+    }
+
+    // This method now handles both calculating and sorting.
+    private void calculateAndSortDistances() {
+        // Only proceed if both data and location are ready.
+        if (!isDataLoaded || !isLocationAvailable) {
+            return;
+        }
+
+        // Calculate distance for each zone in the master list
+        for (SafetyZone zone : allSafetyZones) {
+            if (zone.geolocation != null) {
+                org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
+                        zone.geolocation.getLatitude(), 
+                        zone.geolocation.getLongitude()
+                );
+                zone.distanceToUser = currentUserLocation.distanceToAsDouble(zonePoint);
+            }
+        }
+
+        // Sort the entire master list by the calculated distance
+        Collections.sort(allSafetyZones, Comparator.comparingDouble(z -> z.distanceToUser));
+
+        // Now that the master list is sorted, apply the current filter and update the adapter
+        filterAndDisplay(currentFilterType);
+    }
+
+    private void filterAndDisplay(String type) {
+        currentFilterType = type; // Remember the last selected filter
+
+        List<SafetyZone> filteredList = new ArrayList<>();
+        if (type.equalsIgnoreCase("All")) {
+            filteredList.addAll(allSafetyZones);
+        } else {
+            for (SafetyZone zone : allSafetyZones) {
+                if (zone.type != null && zone.type.equalsIgnoreCase(type)) {
+                    filteredList.add(zone);
+                }
+            }
+        }
+        // Update the adapter with the filtered (and pre-sorted) list
+        adapter.setData(filteredList);
+        adapter.setUserLocation(currentUserLocation);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             fetchCurrentLocationAndCenterPreview();
         }
@@ -178,16 +202,12 @@ public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceStat
     @Override
     public void onResume() {
         super.onResume();
-        if (mapPreview != null) {
-            mapPreview.onResume();
-        }
+        if (mapPreview != null) mapPreview.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (mapPreview != null) {
-            mapPreview.onPause();
-        }
+        if (mapPreview != null) mapPreview.onPause();
     }
 }
