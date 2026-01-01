@@ -9,19 +9,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.grpassignment.R;
-import com.example.grpassignment.SafetyResource;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAdapter.ViewHolder> {
 
-    private List<SafetyResource> resources;
-    private List<SafetyResource> filteredResources;
-    private Context context;
+    private final List<SafetyResource> resources;
+    private final List<SafetyResource> filteredResources;
+    private final Context context;
 
     public SafetyResourceAdapter(Context context, List<SafetyResource> resources) {
         this.context = context;
@@ -112,7 +112,6 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
             context.startActivity(browserIntent);
         }
     }
-
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView, iconCard, categoryBadge;
         ImageView iconImageView;
