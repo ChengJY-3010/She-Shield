@@ -76,58 +76,58 @@ public class SafetyMapFragment extends Fragment {
         return view;
     }
 
-@Override
-public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-    CardView BtnCat = view.findViewById(R.id.map_preview_parent_container);
+        CardView BtnCat = view.findViewById(R.id.map_preview_parent_container);
 
-    // Listener merged with argument passing
-    View.OnClickListener OCLCat = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
+        // Listener merged with argument passing
+        View.OnClickListener OCLCat = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-            Bundle args = new Bundle();
+                Bundle args = new Bundle();
 
-            // Pass Lat & Lng if exist
-            if (currentUserLocation != null) {
-                args.putDouble("latitude", currentUserLocation.getLatitude());
-                args.putDouble("longitude", currentUserLocation.getLongitude());
-            }
-
-            // Navigate with Safe Arguments
-            Navigation.findNavController(v)
-                    .navigate(R.id.action_nav_map_to_fullScreenMapFragment, args);
-        }
-    };
-
-    BtnCat.setOnClickListener(OCLCat);
-
-    // Card List (Verified Safety Zones Near You)
-    RecyclerView recyclerView = view.findViewById(R.id.recyclerSafetyZones);
-    recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-    SafetyZoneAdapter adapter = new SafetyZoneAdapter();
-    recyclerView.setAdapter(adapter);
-
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-    // Load Safety Zones from Firestore
-    db.collection("safety_zones_pin")
-            .get()
-            .addOnSuccessListener(query -> {
-                List<SafetyZone> zones = new ArrayList<>();
-                for (DocumentSnapshot doc : query) {
-                    SafetyZone z = doc.toObject(SafetyZone.class);
-                    zones.add(z);
+                // Pass Lat & Lng if exist
+                if (currentUserLocation != null) {
+                    args.putDouble("latitude", currentUserLocation.getLatitude());
+                    args.putDouble("longitude", currentUserLocation.getLongitude());
                 }
 
-                adapter.setData(zones);
-            })
-            .addOnFailureListener(e -> {
-                Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            });
-}
+                // Navigate with Safe Arguments
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_nav_map_to_fullScreenMapFragment, args);
+            }
+        };
+
+        BtnCat.setOnClickListener(OCLCat);
+
+        // Card List (Verified Safety Zones Near You)
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerSafetyZones);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        SafetyZoneAdapter adapter = new SafetyZoneAdapter();
+        recyclerView.setAdapter(adapter);
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Load Safety Zones from Firestore
+        db.collection("safety_zones_pin")
+                .get()
+                .addOnSuccessListener(query -> {
+                    List<SafetyZone> zones = new ArrayList<>();
+                    for (DocumentSnapshot doc : query) {
+                        SafetyZone z = doc.toObject(SafetyZone.class);
+                        zones.add(z);
+                    }
+
+                    adapter.setData(zones);
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
 
 
     /*SAMPLE

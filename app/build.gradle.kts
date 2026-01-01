@@ -33,6 +33,7 @@ android {
 }
 
 dependencies {
+    // 1. Standard Android Libraries (Keep as is)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -42,19 +43,23 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.database)
     implementation(libs.recyclerview)
+
+    // 2. IMPORT THE FIREBASE BOM FIRST
+    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+
+    // 3. ADD FIREBASE LIBRARIES WITHOUT "libs." TO USE BOM VERSIONS
+    // This forces all of them to use versions that work together
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-common") // Add this to force align common
+
+    // 4. Other Libraries (Keep as is)
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
-    // Google Sign-In
-    implementation("com.google.android.gms:play-services-auth:21.3.0")
-
-    // OSMDroid for OpenStreetMap
-    implementation("org.osmdroid:osmdroid-android:6.1.20")
-
-    // Firebase Firestore
-    implementation("com.google.firebase:firebase-firestore:26.0.2")
 }

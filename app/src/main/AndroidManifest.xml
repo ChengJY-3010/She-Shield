@@ -39,6 +39,10 @@
             android:name=".PostReportActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".MainActivity4"
+            android:exported="true" />
+
         <!-- Activity for viewing report details -->
         <activity
             android:name=".ReportDetailActivity"
