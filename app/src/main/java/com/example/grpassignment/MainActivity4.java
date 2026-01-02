@@ -224,7 +224,6 @@ public class MainActivity4 extends AppCompatActivity {
             startActivity(intent);
         });
     }
-
     private void applyFilter(String filterType, CardView selectedCard) {
         currentFilter = filterType;
         Log.d(TAG, "Applying filter: " + filterType);

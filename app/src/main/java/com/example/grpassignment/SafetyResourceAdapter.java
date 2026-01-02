@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
@@ -28,7 +29,10 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
         this.context = context;
         this.resources = new ArrayList<>();
         this.filteredResources = new ArrayList<>();
-        Log.d("SafetyResourceAdapter", "Constructor called");
+        if (resources != null) {
+            this.resources.addAll(resources);
+            this.filteredResources.addAll(resources);
+        }
     }
 
     @NonNull
@@ -47,13 +51,9 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
         holder.categoryTextView.setText(resource.getCategory());
         holder.durationTextView.setText(resource.getDuration());
 
-        // Set icon based on type
         setIconAndColor(holder, resource.getType());
-
-        // Set category badge color
         setCategoryColor(holder.categoryBadge, holder.categoryTextView, resource.getCategory());
 
-        // Click listener to open resource
         holder.cardView.setOnClickListener(v -> openResource(resource));
     }
 
@@ -90,64 +90,32 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
     }
 
     public void updateList(List<SafetyResource> newList) {
-        Log.d("SafetyResourceAdapter", "🔥 ===== UPDATE LIST START =====");
-        Log.d("SafetyResourceAdapter", "🔥 newList size: " + (newList != null ? newList.size() : "NULL"));
-
-        if (newList != null && !newList.isEmpty()) {
-            Log.d("SafetyResourceAdapter", "🔥 First item in newList: " + newList.get(0).getTitle());
-            Log.d("SafetyResourceAdapter", "🔥 First item type: " + newList.get(0).getType());
-        }
-
         this.resources.clear();
-        if (newList != null) {
-            this.resources.addAll(newList);
-        }
-
         this.filteredResources.clear();
         if (newList != null) {
+            this.resources.addAll(newList);
             this.filteredResources.addAll(newList);
         }
-
-        Log.d("SafetyResourceAdapter", "🔥 After update - resources.size(): " + this.resources.size());
-        Log.d("SafetyResourceAdapter", "🔥 After update - filteredResources.size(): " + this.filteredResources.size());
-
         notifyDataSetChanged();
-        Log.d("SafetyResourceAdapter", "🔥 ===== UPDATE LIST END =====");
     }
 
     public void filterByType(String type) {
-        Log.d("SafetyResourceAdapter", "=== FILTER DEBUG START ===");
-        Log.d("SafetyResourceAdapter", "Filter requested: " + type);
-        Log.d("SafetyResourceAdapter", "Total resources before filter: " + resources.size());
-
         filteredResources.clear();
-
         if (type.equalsIgnoreCase("All")) {
             filteredResources.addAll(resources);
-            Log.d("SafetyResourceAdapter", "Showing ALL resources");
         } else {
             for (SafetyResource resource : resources) {
-                Log.d("SafetyResourceAdapter", "Checking: " + resource.getTitle() +
-                        " | Type: '" + resource.getType() + "' | Filter: '" + type + "'");
-
                 if (resource.getType() != null && resource.getType().equalsIgnoreCase(type)) {
                     filteredResources.add(resource);
-                    Log.d("SafetyResourceAdapter", "✓ MATCHED!");
-                } else {
-                    Log.d("SafetyResourceAdapter", "✗ Not matched");
                 }
             }
         }
-
-        Log.d("SafetyResourceAdapter", "Filtered resources count: " + filteredResources.size());
-        Log.d("SafetyResourceAdapter", "=== FILTER DEBUG END ===");
-
         notifyDataSetChanged();
     }
 
     private void openResource(SafetyResource resource) {
-        // Workshop navigation - goes to RegistrationActivity
         if ("Workshop".equals(resource.getType())) {
+            // Open RegistrationActivity
             Intent intent = new Intent(context, RegistrationActivity.class);
             intent.putExtra("RESOURCE_TITLE", resource.getTitle());
             intent.putExtra("EVENT_DATE", resource.getEventDate());
@@ -156,22 +124,27 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
             intent.putExtra("INSTRUCTOR", resource.getInstructor());
             intent.putExtra("CAPACITY", resource.getCapacity());
             intent.putExtra("DESCRIPTION", resource.getDescription());
-            // Don't use any flags that clear the back stack
             context.startActivity(intent);
-            Log.d("SafetyResourceAdapter", "Opening workshop registration: " + resource.getTitle());
-        }
-        // Video, Article, Legal - opens external URL if available
-        else if (resource.getFile() != null && !resource.getFile().isEmpty()) {
+        } else if (resource.getFile() != null && !resource.getFile().isEmpty()) {
             try {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(resource.getFile()));
+                Uri uri = Uri.parse(resource.getFile());
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
                 browserIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                // Force open in browser
+                browserIntent.setPackage("com.android.chrome");
+                if (browserIntent.resolveActivity(context.getPackageManager()) == null) {
+                    browserIntent.setPackage(null); // fallback to any browser
+                }
+
                 context.startActivity(browserIntent);
-                Log.d("SafetyResourceAdapter", "Opening external URL: " + resource.getFile());
             } catch (Exception e) {
+                Toast.makeText(context, "Cannot open link", Toast.LENGTH_SHORT).show();
                 Log.e("SafetyResourceAdapter", "Error opening URL: " + e.getMessage());
             }
         } else {
-            Log.d("SafetyResourceAdapter", "No URL available for: " + resource.getTitle());
+            Toast.makeText(context, "No link available for this resource", Toast.LENGTH_SHORT).show();
         }
     }
 
