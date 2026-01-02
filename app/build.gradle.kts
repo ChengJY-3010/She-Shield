@@ -3,17 +3,18 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.kapt")
     // Duplicate line removed here
 }
 
 android {
     namespace = "com.example.grpassignment"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.grpassignment"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -34,6 +35,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    kotlinOptions {
+        jvmTarget = "11"   // <-- ADD THIS
+    }
 }
 
 dependencies {
@@ -45,12 +50,22 @@ dependencies {
     implementation(libs.cardview)
     implementation(libs.play.services.maps)
 
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+    implementation("androidx.navigation:navigation-fragment:2.7.7")
+    implementation("androidx.navigation:navigation-ui:2.7.7")
+
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
+
+
     // 2. Firebase Configuration
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-auth")
 
     // 3. Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.3.0")
+    implementation(libs.play.services.location)
+    implementation(libs.firebase.firestore)
 
     // 4. Testing Libraries
     testImplementation(libs.junit)

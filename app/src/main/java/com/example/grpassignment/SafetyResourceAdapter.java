@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,8 +26,9 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
 
     public SafetyResourceAdapter(Context context, List<SafetyResource> resources) {
         this.context = context;
-        this.resources = resources;
-        this.filteredResources = new ArrayList<>(resources);
+        this.resources = new ArrayList<>();
+        this.filteredResources = new ArrayList<>();
+        Log.d("SafetyResourceAdapter", "Constructor called");
     }
 
     @NonNull
@@ -62,54 +64,114 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
 
     private void setIconAndColor(ViewHolder holder, String type) {
         switch (type) {
-            case "Videos":
+            case "Video":
                 holder.iconCard.setCardBackgroundColor(Color.parseColor("#FEE2E2"));
-                holder.iconImageView.setImageResource(R.drawable.screenshot_2025_11_18_160336);
+                holder.iconImageView.setImageResource(R.drawable.image_removebg_preview__26_);
                 break;
-            case "Articles":
+            case "Article":
                 holder.iconCard.setCardBackgroundColor(Color.parseColor("#DBEAFE"));
-                holder.iconImageView.setImageResource(R.drawable.screenshot_2025_11_18_160352);
+                holder.iconImageView.setImageResource(R.drawable.image_removebg_preview__24_);
                 break;
-            case "Workshops":
+            case "Workshop":
                 holder.iconCard.setCardBackgroundColor(Color.parseColor("#FEE2E2"));
-                holder.iconImageView.setImageResource(R.drawable.screenshot_2025_11_18_160406);
+                holder.iconImageView.setImageResource(R.drawable.workshop);
                 break;
             case "Legal":
                 holder.iconCard.setCardBackgroundColor(Color.parseColor("#DBEAFE"));
-                holder.iconImageView.setImageResource(R.drawable.screenshot_2025_11_18_160422);
-                break;
-            default:
-                holder.iconCard.setCardBackgroundColor(Color.parseColor("#F3E8FF"));
-                holder.iconImageView.setImageResource(R.drawable.screenshot_2025_11_18_160439);
+                holder.iconImageView.setImageResource(R.drawable.legal);
                 break;
         }
     }
 
     private void setCategoryColor(CardView badgeCard, TextView badgeText, String category) {
-        // Set colors based on category
         badgeCard.setCardBackgroundColor(Color.parseColor("#D1FAE5"));
         badgeText.setTextColor(Color.parseColor("#047857"));
         badgeText.setText(category);
     }
 
+    public void updateList(List<SafetyResource> newList) {
+        Log.d("SafetyResourceAdapter", "🔥 ===== UPDATE LIST START =====");
+        Log.d("SafetyResourceAdapter", "🔥 newList size: " + (newList != null ? newList.size() : "NULL"));
+
+        if (newList != null && !newList.isEmpty()) {
+            Log.d("SafetyResourceAdapter", "🔥 First item in newList: " + newList.get(0).getTitle());
+            Log.d("SafetyResourceAdapter", "🔥 First item type: " + newList.get(0).getType());
+        }
+
+        this.resources.clear();
+        if (newList != null) {
+            this.resources.addAll(newList);
+        }
+
+        this.filteredResources.clear();
+        if (newList != null) {
+            this.filteredResources.addAll(newList);
+        }
+
+        Log.d("SafetyResourceAdapter", "🔥 After update - resources.size(): " + this.resources.size());
+        Log.d("SafetyResourceAdapter", "🔥 After update - filteredResources.size(): " + this.filteredResources.size());
+
+        notifyDataSetChanged();
+        Log.d("SafetyResourceAdapter", "🔥 ===== UPDATE LIST END =====");
+    }
+
     public void filterByType(String type) {
+        Log.d("SafetyResourceAdapter", "=== FILTER DEBUG START ===");
+        Log.d("SafetyResourceAdapter", "Filter requested: " + type);
+        Log.d("SafetyResourceAdapter", "Total resources before filter: " + resources.size());
+
         filteredResources.clear();
-        if (type.equals("All")) {
+
+        if (type.equalsIgnoreCase("All")) {
             filteredResources.addAll(resources);
+            Log.d("SafetyResourceAdapter", "Showing ALL resources");
         } else {
             for (SafetyResource resource : resources) {
-                if (resource.getType().equals(type)) {
+                Log.d("SafetyResourceAdapter", "Checking: " + resource.getTitle() +
+                        " | Type: '" + resource.getType() + "' | Filter: '" + type + "'");
+
+                if (resource.getType() != null && resource.getType().equalsIgnoreCase(type)) {
                     filteredResources.add(resource);
+                    Log.d("SafetyResourceAdapter", "✓ MATCHED!");
+                } else {
+                    Log.d("SafetyResourceAdapter", "✗ Not matched");
                 }
             }
         }
+
+        Log.d("SafetyResourceAdapter", "Filtered resources count: " + filteredResources.size());
+        Log.d("SafetyResourceAdapter", "=== FILTER DEBUG END ===");
+
         notifyDataSetChanged();
     }
 
     private void openResource(SafetyResource resource) {
-        if (resource.getFile() != null && !resource.getFile().isEmpty()) {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(resource.getFile()));
-            context.startActivity(browserIntent);
+        // Workshop navigation - goes to RegistrationActivity
+        if ("Workshop".equals(resource.getType())) {
+            Intent intent = new Intent(context, RegistrationActivity.class);
+            intent.putExtra("RESOURCE_TITLE", resource.getTitle());
+            intent.putExtra("EVENT_DATE", resource.getEventDate());
+            intent.putExtra("EVENT_TIME", resource.getEventTime());
+            intent.putExtra("LOCATION", resource.getLocation());
+            intent.putExtra("INSTRUCTOR", resource.getInstructor());
+            intent.putExtra("CAPACITY", resource.getCapacity());
+            intent.putExtra("DESCRIPTION", resource.getDescription());
+            // Don't use any flags that clear the back stack
+            context.startActivity(intent);
+            Log.d("SafetyResourceAdapter", "Opening workshop registration: " + resource.getTitle());
+        }
+        // Video, Article, Legal - opens external URL if available
+        else if (resource.getFile() != null && !resource.getFile().isEmpty()) {
+            try {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(resource.getFile()));
+                browserIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+                context.startActivity(browserIntent);
+                Log.d("SafetyResourceAdapter", "Opening external URL: " + resource.getFile());
+            } catch (Exception e) {
+                Log.e("SafetyResourceAdapter", "Error opening URL: " + e.getMessage());
+            }
+        } else {
+            Log.d("SafetyResourceAdapter", "No URL available for: " + resource.getTitle());
         }
     }
 
