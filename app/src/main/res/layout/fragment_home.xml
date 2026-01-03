@@ -136,8 +136,6 @@
                     android:layout_height="match_parent"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:clickable="true"
-                    android:foreground="?android:attr/selectableItemBackground"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="6dp">
 
@@ -158,12 +156,14 @@
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
-                        <ImageView
-                            android:id="@+id/imageView19"
+                        <FrameLayout
+                            android:id="@+id/map_preview_container"
                             android:layout_width="145dp"
                             android:layout_height="194dp"
-                            android:contentDescription="Safety map icon"
-                            app:srcCompat="@drawable/gemini_generated_image_8vl9fy8vl9fy8vl9" />
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground"
+                            android:contentDescription="Safety map icon" />
 
                         <Button
                             android:id="@+id/button4"
@@ -312,7 +312,8 @@
                                         android:id="@+id/textView9"
                                         android:layout_width="172dp"
                                         android:layout_height="wrap_content"
-                                        android:text="Self-Defense Workshop\n19 Nov 2025, Saturday (9a.m. - 11a.m.)"
+                                        android:text="Self-Defense Workshop
+19 Nov 2025, Saturday (9a.m. - 11a.m.)"
                                         android:textColor="@android:color/black"
                                         android:textSize="14sp"
                                         android:textStyle="bold" />

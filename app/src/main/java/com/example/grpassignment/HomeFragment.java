@@ -27,6 +27,7 @@ import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
@@ -78,10 +79,22 @@ public class HomeFragment extends Fragment {
         sosHoldText = view.findViewById(R.id.sos_hold_text);
         CardView communityReportButton = view.findViewById(R.id.btn_community_report_card);
         Button shareLocationButton = view.findViewById(R.id.button4);
-        ImageView safetyMapImage = view.findViewById(R.id.imageView19);
         CardView educationHubCard = view.findViewById(R.id.btn_report);
         TextView viewAllText = view.findViewById(R.id.tv_view_all);
         Button sharePostButton = view.findViewById(R.id.btn_share_post_home);
+        View mapPreviewContainer = view.findViewById(R.id.map_preview_container);
+        CardView btnSafetyZones = view.findViewById(R.id.btn_safety_zones);
+
+        if (savedInstanceState == null) {
+            Fragment mapPreviewFragment = new MapPreviewFragment();
+            FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+            transaction.replace(R.id.map_preview_container, mapPreviewFragment).commit();
+        }
+
+        btnSafetyZones.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.action_nav_home_to_nav_map);
+        });
 
         fetchLatestReport(view);
 
@@ -151,11 +164,6 @@ public class HomeFragment extends Fragment {
             } else {
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
             }
-        });
-
-        safetyMapImage.setOnClickListener(v -> {
-            NavController navController = Navigation.findNavController(v);
-            navController.navigate(R.id.action_nav_home_to_nav_map);
         });
 
         View.OnClickListener educationHubClickListener = v -> {
