@@ -1,20 +1,22 @@
 package com.example.grpassignment;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
-import android.net.Uri;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,10 +53,24 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
         holder.categoryTextView.setText(resource.getCategory());
         holder.durationTextView.setText(resource.getDuration());
 
-        setIconAndColor(holder, resource.getType());
+        // Load image using Glide
+        if (resource.getImageUrl() != null && !resource.getImageUrl().isEmpty()) {
+            Glide.with(context)
+                    .load(resource.getImageUrl())
+                    .placeholder(R.drawable.image_removebg_preview__24_)
+                    .error(R.drawable.image_removebg_preview__24_)
+                    .centerCrop()
+                    .into(holder.iconImageView);
+        } else {
+            // Fallback to type-based icons if no imageUrl
+            setIconByType(holder.iconImageView, resource.getType());
+        }
+
+        setIconCardColor(holder, resource.getType());
         setCategoryColor(holder.categoryBadge, holder.categoryTextView, resource.getCategory());
 
-        holder.cardView.setOnClickListener(v -> openResource(resource));
+        // Navigate to detail fragment on click
+        holder.cardView.setOnClickListener(v -> openResourceDetail(resource));
     }
 
     @Override
@@ -62,23 +78,39 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
         return filteredResources.size();
     }
 
-    private void setIconAndColor(ViewHolder holder, String type) {
+    private void setIconByType(ImageView imageView, String type) {
+        switch (type) {
+            case "Video":
+                imageView.setImageResource(R.drawable.image_removebg_preview__26_);
+                break;
+            case "Article":
+                imageView.setImageResource(R.drawable.image_removebg_preview__24_);
+                break;
+            case "Workshop":
+                imageView.setImageResource(R.drawable.workshop);
+                break;
+            case "Legal":
+                imageView.setImageResource(R.drawable.legal);
+                break;
+            default:
+                imageView.setImageResource(R.drawable.image_removebg_preview__24_);
+                break;
+        }
+    }
+
+    private void setIconCardColor(ViewHolder holder, String type) {
         switch (type) {
             case "Video":
                 holder.iconCard.setCardBackgroundColor(Color.parseColor("#FEE2E2"));
-                holder.iconImageView.setImageResource(R.drawable.image_removebg_preview__26_);
                 break;
             case "Article":
                 holder.iconCard.setCardBackgroundColor(Color.parseColor("#DBEAFE"));
-                holder.iconImageView.setImageResource(R.drawable.image_removebg_preview__24_);
                 break;
             case "Workshop":
                 holder.iconCard.setCardBackgroundColor(Color.parseColor("#FEE2E2"));
-                holder.iconImageView.setImageResource(R.drawable.workshop);
                 break;
             case "Legal":
                 holder.iconCard.setCardBackgroundColor(Color.parseColor("#DBEAFE"));
-                holder.iconImageView.setImageResource(R.drawable.legal);
                 break;
         }
     }
@@ -87,6 +119,35 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
         badgeCard.setCardBackgroundColor(Color.parseColor("#D1FAE5"));
         badgeText.setTextColor(Color.parseColor("#047857"));
         badgeText.setText(category);
+    }
+
+    private void openResourceDetail(SafetyResource resource) {
+        try {
+            // Create bundle with resource data
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("safetyResource", resource);
+
+            // Create and show detail fragment
+            SafetyResourceDetailFragment detailFragment = new SafetyResourceDetailFragment();
+            detailFragment.setArguments(bundle);
+
+            // Navigate to detail fragment
+            if (context instanceof FragmentActivity) {
+                ((FragmentActivity) context).getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, detailFragment)
+                        .addToBackStack(null)
+                        .commit();
+            } else if (context instanceof AppCompatActivity) {
+                ((AppCompatActivity) context).getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, detailFragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
+        } catch (Exception e) {
+            Log.e("SafetyResourceAdapter", "Error opening detail: " + e.getMessage());
+        }
     }
 
     public void updateList(List<SafetyResource> newList) {
@@ -111,41 +172,6 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
             }
         }
         notifyDataSetChanged();
-    }
-
-    private void openResource(SafetyResource resource) {
-        if ("Workshop".equals(resource.getType())) {
-            // Open RegistrationActivity
-            Intent intent = new Intent(context, RegistrationActivity.class);
-            intent.putExtra("RESOURCE_TITLE", resource.getTitle());
-            intent.putExtra("EVENT_DATE", resource.getEventDate());
-            intent.putExtra("EVENT_TIME", resource.getEventTime());
-            intent.putExtra("LOCATION", resource.getLocation());
-            intent.putExtra("INSTRUCTOR", resource.getInstructor());
-            intent.putExtra("CAPACITY", resource.getCapacity());
-            intent.putExtra("DESCRIPTION", resource.getDescription());
-            context.startActivity(intent);
-        } else if (resource.getFile() != null && !resource.getFile().isEmpty()) {
-            try {
-                Uri uri = Uri.parse(resource.getFile());
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
-                browserIntent.addCategory(Intent.CATEGORY_BROWSABLE);
-                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                // Force open in browser
-                browserIntent.setPackage("com.android.chrome");
-                if (browserIntent.resolveActivity(context.getPackageManager()) == null) {
-                    browserIntent.setPackage(null); // fallback to any browser
-                }
-
-                context.startActivity(browserIntent);
-            } catch (Exception e) {
-                Toast.makeText(context, "Cannot open link", Toast.LENGTH_SHORT).show();
-                Log.e("SafetyResourceAdapter", "Error opening URL: " + e.getMessage());
-            }
-        } else {
-            Toast.makeText(context, "No link available for this resource", Toast.LENGTH_SHORT).show();
-        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

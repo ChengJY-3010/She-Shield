@@ -75,6 +75,7 @@ public class RegistrationActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                // Return to the previous screen (Resources Fragment)
                 finish();
             }
         });

@@ -58,7 +58,7 @@ public class MainActivity4 extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.safety_resources);
+        setContentView(R.layout.fragment_safety_resources);
 
         // Window Insets
         View mainView = findViewById(R.id.main);
@@ -144,40 +144,45 @@ public class MainActivity4 extends AppCompatActivity {
 
     private void setupBottomNavigation() {
         // Home
-        navHome.setOnClickListener(v -> {
-            // Navigate to MainActivity (Home)
-            Intent intent = new Intent(MainActivity4.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
-            finish();
-        });
+        if (navHome != null) {
+            navHome.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity4.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            });
+        }
 
         // Emergency
-        navEmergency.setOnClickListener(v -> {
-            // Navigate to Emergency Activity (MainActivity2)
-            Intent intent = new Intent(MainActivity4.this, MainActivity2.class);
-            startActivity(intent);
-        });
+        if (navEmergency != null) {
+            navEmergency.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity4.this, MainActivity2.class);
+                startActivity(intent);
+            });
+        }
 
-        // Resources (current page - already here)
-        navResources.setOnClickListener(v -> {
-            // Already on resources page
-            Toast.makeText(this, "Already on Resources", Toast.LENGTH_SHORT).show();
-        });
+        // Resources (current page)
+        if (navResources != null) {
+            navResources.setOnClickListener(v -> {
+                Toast.makeText(this, "Already on Resources", Toast.LENGTH_SHORT).show();
+            });
+        }
 
         // Community
-        navCommunity.setOnClickListener(v -> {
-            // Navigate to Community Activity (MainActivity3)
-            Intent intent = new Intent(MainActivity4.this, MainActivity3.class);
-            startActivity(intent);
-        });
+        if (navCommunity != null) {
+            navCommunity.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity4.this, MainActivity3.class);
+                startActivity(intent);
+            });
+        }
 
         // Profile
-        navProfile.setOnClickListener(v -> {
-            // Navigate to Profile Activity (MainActivity5)
-            Intent intent = new Intent(MainActivity4.this, MainActivity5.class);
-            startActivity(intent);
-        });
+        if (navProfile != null) {
+            navProfile.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity4.this, MainActivity5.class);
+                startActivity(intent);
+            });
+        }
     }
 
     private void setupWorkshopRotation() {
