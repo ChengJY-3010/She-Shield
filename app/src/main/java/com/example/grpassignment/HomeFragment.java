@@ -36,6 +36,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.example.grpassignment.SafetyResource;
 
 public class HomeFragment extends Fragment {
 
@@ -97,6 +98,7 @@ public class HomeFragment extends Fragment {
         });
 
         fetchLatestReport(view);
+        fetchLatestSafetyResource(view);
 
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             checkForNearbyReports();
@@ -235,6 +237,39 @@ public class HomeFragment extends Fragment {
                 });
     }
 
+    private void fetchLatestSafetyResource(View view) {
+        db.collection("safety_resource")
+                .orderBy("timestamp", Query.Direction.DESCENDING) // Assuming a 'timestamp' field for ordering
+                .limit(1)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            SafetyResource resource = document.toObject(SafetyResource.class);
+                            View resourceCard = view.findViewById(R.id.latest_safety_resource);
+
+                            if (resourceCard != null) {
+                                TextView titleTextView = resourceCard.findViewById(R.id.titleTextView);
+                                TextView categoryTextView = resourceCard.findViewById(R.id.categoryTextView);
+                                TextView durationTextView = resourceCard.findViewById(R.id.durationTextView);
+
+                                if (titleTextView != null) {
+                                    titleTextView.setText(resource.getTitle());
+                                }
+                                if (categoryTextView != null) {
+                                    categoryTextView.setText(resource.getCategory());
+                                }
+                                if (durationTextView != null) {
+                                    durationTextView.setText(resource.getDuration());
+                                }
+                            }
+                        }
+                    } else {
+                        Log.d("HomeFragment", "Error getting safety resource: ", task.getException());
+                    }
+                });
+    }
+
     private void checkForNearbyReports() {
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return; // Permissions are not granted.
@@ -283,7 +318,7 @@ public class HomeFragment extends Fragment {
         ImageView safetyStatusIcon = getView().findViewById(R.id.safety_status_icon);
 
         safetyStatusCard.setCardBackgroundColor(ContextCompat.getColor(getContext(), R.color.safe_zone_bg));
-        safetyStatusTitle.setText("You're in a Safe Zone");
+        safetyStatusTitle.setText("You\'re in a Safe Zone");
         safetyStatusTitle.setTextColor(ContextCompat.getColor(getContext(), R.color.safe_zone_text));
         safetyStatusSubtitle.setText("Within 500m of verified safe locations");
         safetyStatusSubtitle.setTextColor(ContextCompat.getColor(getContext(), R.color.safe_zone_text));
@@ -297,7 +332,7 @@ public class HomeFragment extends Fragment {
         ImageView safetyStatusIcon = getView().findViewById(R.id.safety_status_icon);
 
         safetyStatusCard.setCardBackgroundColor(ContextCompat.getColor(getContext(), R.color.unsafe_zone_bg));
-        safetyStatusTitle.setText("Alert: You're in a Reported Zone");
+        safetyStatusTitle.setText("Alert: You\'re in a Reported Zone");
         safetyStatusTitle.setTextColor(ContextCompat.getColor(getContext(), R.color.unsafe_zone_text));
         safetyStatusSubtitle.setText("A report has been filed within 500m of your location");
         safetyStatusSubtitle.setTextColor(ContextCompat.getColor(getContext(), R.color.unsafe_zone_text));

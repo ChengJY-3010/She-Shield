@@ -2,6 +2,7 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
@@ -46,7 +47,7 @@
                 android:id="@+id/titleTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Resource Title"
+                android:text="Workplace Safety Seminar"
                 android:textColor="#1F2937"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -75,7 +76,7 @@
                         android:paddingTop="3dp"
                         android:paddingEnd="8dp"
                         android:paddingBottom="3dp"
-                        android:text="Category"
+                        android:text="Workshop"
                         android:textColor="#047857"
                         android:textSize="11sp"
                         android:textStyle="bold" />
@@ -88,7 +89,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
                     android:layout_gravity="center_vertical"
-                    android:text="Duration"
+                    android:text="1.5 hours"
                     android:textColor="#6B7280"
                     android:textSize="12sp" />
 
