@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,10 +52,10 @@ import java.util.Locale;
 
 public class TrustedContactsFragment extends Fragment {
 
+    private static final String TAG = "TrustedContactsFragment";
     private FirebaseFirestore db;
     private FirebaseAuth auth;
-    private String currentUserId = "U0001";
-    //private String currentUserId;
+    private String currentUserId = "U0001"; // Fallback default
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
@@ -124,12 +125,17 @@ public class TrustedContactsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         // Initialize Firebase Firestore
-//        auth = FirebaseAuth.getInstance();
+        auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-//        FirebaseUser user = auth.getCurrentUser();
-//        if (user != null) {
-//            currentUserId = user.getUid();
-//        }
+        
+        // Get authenticated user or use fallback
+        if (auth.getCurrentUser() != null) {
+            currentUserId = auth.getCurrentUser().getUid();
+            Log.d(TAG, "Using authenticated user: " + currentUserId);
+        } else {
+            Log.w(TAG, "No authenticated user, using fallback: " + currentUserId);
+            Toast.makeText(getContext(), "Using test user (not authenticated)", Toast.LENGTH_SHORT).show();
+        }
 
         // Initialize Views
         bottomLocationCard = view.findViewById(R.id.card_location_status);
@@ -526,14 +532,23 @@ public class TrustedContactsFragment extends Fragment {
 
     // DATA FETCHING
     private void fetchContacts() {
+        Log.d(TAG, "Fetching contacts for user: " + currentUserId);
+        
         db.collection("user").document(currentUserId).collection("trusted_contacts")
                 .orderBy("rank").get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!isAdded()) return;
+                    
+                    Log.d(TAG, "Successfully fetched " + queryDocumentSnapshots.size() + " contacts");
                     contactList.clear();
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        TrustedContact contact = document.toObject(TrustedContact.class);
-                        contact.setId(document.getId());
-                        contactList.add(contact);
+                        try {
+                            TrustedContact contact = document.toObject(TrustedContact.class);
+                            contact.setId(document.getId());
+                            contactList.add(contact);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing contact: " + e.getMessage(), e);
+                        }
                     }
                     adapter.notifyDataSetChanged();
 
@@ -546,7 +561,27 @@ public class TrustedContactsFragment extends Fragment {
                         recyclerView.setVisibility(View.VISIBLE);
                     }
                 })
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Error loading contacts", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    if (!isAdded()) return;
+                    
+                    Log.e(TAG, "Firestore error: " + e.getMessage(), e);
+                    String errorMsg = "Error loading contacts";
+                    
+                    if (e.getMessage() != null) {
+                        if (e.getMessage().contains("PERMISSION_DENIED")) {
+                            errorMsg = "Database permission denied. Please check Firestore security rules for 'user/" + currentUserId + "/trusted_contacts'";
+                            Log.e(TAG, "FIRESTORE PERMISSION DENIED - Check Firebase Console security rules");
+                        } else {
+                            errorMsg = "Error: " + e.getMessage();
+                        }
+                    }
+                    
+                    Toast.makeText(getContext(), errorMsg, Toast.LENGTH_LONG).show();
+                    
+                    // Show empty state on error
+                    if(emptyStateLayout != null) emptyStateLayout.setVisibility(View.VISIBLE);
+                    recyclerView.setVisibility(View.GONE);
+                });
     }
 
     private void showAddContactDialog() {

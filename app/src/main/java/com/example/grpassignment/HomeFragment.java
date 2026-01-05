@@ -113,6 +113,10 @@ public class HomeFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
+        
+        // Ensure user is authenticated
+        ensureAuthentication();
+        
         if (getActivity() != null) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         }
@@ -281,11 +285,13 @@ public class HomeFragment extends Fragment {
 
         if (getContext() == null) {
             Log.e(TAG, "Context is null, cannot save alert.");
+            Toast.makeText(getContext(), "Error: Context not available", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.e(TAG, "Location permission not granted, cannot save alert.");
+            Toast.makeText(getContext(), "Location permission required", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -294,10 +300,13 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG, "Successfully retrieved location: " + location.getLatitude() + ", " + location.getLongitude());
                 FirebaseUser currentUser = mAuth.getCurrentUser();
                 if (currentUser == null) {
-                    Log.e(TAG, "User not signed in, cannot save alert.");
+                    Log.e(TAG, "User not signed in, cannot save alert. Attempting re-authentication...");
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Authentication issue. Please restart the app and log in again.", Toast.LENGTH_LONG).show();
+                    }
                     return;
                 }
-                Log.d(TAG, "User is signed in: " + currentUser.getUid());
+                Log.d(TAG, "User is signed in: " + currentUser.getUid() + " (Anonymous: " + currentUser.isAnonymous() + ")");
 
                 Map<String, Object> alert = new HashMap<>();
                 alert.put("initiatorId", currentUser.getUid());
@@ -557,5 +566,33 @@ public class HomeFragment extends Fragment {
     private void stopBlinking() {
         isBlinking = false;
         handler.removeCallbacks(blinkRunnable);
+    }
+
+    /**
+     * Ensures the user is authenticated before using Firebase features.
+     * If not logged in with email/password, signs in anonymously as a fallback.
+     */
+    private void ensureAuthentication() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            Log.d(TAG, "User not authenticated, signing in anonymously...");
+            mAuth.signInAnonymously()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "Anonymous sign-in successful");
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                Log.d(TAG, "User ID: " + user.getUid());
+                            }
+                        } else {
+                            Log.e(TAG, "Anonymous sign-in failed", task.getException());
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "Authentication failed. Some features may not work.", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+        } else {
+            Log.d(TAG, "User already authenticated: " + currentUser.getUid());
+        }
     }
 }
