@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +40,9 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+import org.osmdroid.bonuspack.routing.OSRMRoadManager;
+import org.osmdroid.bonuspack.routing.Road;
+import org.osmdroid.bonuspack.routing.RoadManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -228,6 +232,7 @@ public class SafetyMapFragment extends Fragment implements SafetyZoneAdapter.OnI
     private void calculateAndSortDistances() {
         if (!isDataLoaded || !isLocationAvailable) return;
 
+        // First, calculate straight-line distances for quick display
         for (SafetyZone zone : allSafetyZones) {
             if (zone.geolocation != null) {
                 org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
@@ -242,6 +247,60 @@ public class SafetyMapFragment extends Fragment implements SafetyZoneAdapter.OnI
         updateMapPreviewMarkers();
         updateChipStyles(filterAll);
         filterAndDisplay(currentFilterType);
+
+        // Then calculate actual road distances in background
+        calculateRoadDistances();
+    }
+
+    private void calculateRoadDistances() {
+        new Thread(() -> {
+            try {
+                if (getContext() == null) return;
+                
+                RoadManager roadManager = new OSRMRoadManager(getContext(), "SheShield/1.0");
+                
+                for (int i = 0; i < allSafetyZones.size(); i++) {
+                    SafetyZone zone = allSafetyZones.get(i);
+                    
+                    if (zone.geolocation != null && getActivity() != null) {
+                        try {
+                            org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
+                                    zone.geolocation.getLatitude(),
+                                    zone.geolocation.getLongitude()
+                            );
+                            
+                            ArrayList<GeoPoint> waypoints = new ArrayList<>();
+                            waypoints.add(currentUserLocation);
+                            waypoints.add(zonePoint);
+                            
+                            Road road = roadManager.getRoad(waypoints);
+                            
+                            if (road != null && road.mLength > 0) {
+                                zone.distanceToUser = road.mLength * 1000; // Convert km to meters
+                            }
+                            
+                            // Add small delay to avoid overwhelming the API
+                            Thread.sleep(200);
+                            
+                        } catch (Exception e) {
+                            // Keep straight-line distance on error
+                            Log.e("SafetyMapFragment", "Error calculating road distance for zone", e);
+                        }
+                    }
+                }
+                
+                // Update UI after all calculations
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        Collections.sort(allSafetyZones, Comparator.comparingDouble(z -> z.distanceToUser));
+                        filterAndDisplay(currentFilterType);
+                    });
+                }
+                
+            } catch (Exception e) {
+                Log.e("SafetyMapFragment", "Error in calculateRoadDistances", e);
+            }
+        }).start();
     }
 
     private void filterAndDisplay(String type) {

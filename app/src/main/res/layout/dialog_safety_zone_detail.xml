@@ -84,6 +84,20 @@
             android:textStyle="bold"
             tools:text="🟢 24/7 Support" />
 
+        <TextView
+            android:id="@+id/dialog_distance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:drawableStart="@android:drawable/ic_menu_mylocation"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="Distance: 2.5 km (~5 min)" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

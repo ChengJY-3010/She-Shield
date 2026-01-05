@@ -213,6 +213,7 @@ public class FullScreenMapFragment extends Fragment {
         TextView dialogDescription = dialogView.findViewById(R.id.dialog_description);
         TextView dialogPhone = dialogView.findViewById(R.id.dialog_phone);
         TextView dialogStatus = dialogView.findViewById(R.id.dialog_status);
+        TextView dialogDistance = dialogView.findViewById(R.id.dialog_distance);
         Button directionButton = dialogView.findViewById(R.id.dialog_direction_button);
         Button detailsButton = dialogView.findViewById(R.id.dialog_details_button);
 
@@ -230,6 +231,12 @@ public class FullScreenMapFragment extends Fragment {
 
         // Get the safety zone location
         com.google.firebase.firestore.GeoPoint geoPoint = doc.getGeoPoint("geolocation");
+
+        // Calculate and show route distance
+        if (geoPoint != null && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            GeoPoint destination = new GeoPoint(geoPoint.getLatitude(), geoPoint.getLongitude());
+            calculateRouteDistance(destination, dialogDistance);
+        }
 
         // --- Create the dialog so we can dismiss it from the button ---
         final AlertDialog dialog = new AlertDialog.Builder(requireContext())
@@ -429,5 +436,54 @@ public class FullScreenMapFragment extends Fragment {
             fabCloseRoute.hide();
             Toast.makeText(getContext(), "Route cleared", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * Calculates route distance and updates the distance TextView
+     */
+    private void calculateRouteDistance(GeoPoint destination, TextView distanceTextView) {
+        if (!isAdded() || getContext() == null || getActivity() == null) {
+            return;
+        }
+        
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null && isAdded() && getActivity() != null) {
+                GeoPoint currentLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+                
+                // Calculate route in background thread
+                new Thread(() -> {
+                    try {
+                        Context context = getContext();
+                        if (context == null) return;
+                        
+                        RoadManager roadManager = new OSRMRoadManager(context, "SheShield/1.0");
+                        
+                        ArrayList<GeoPoint> waypoints = new ArrayList<>();
+                        waypoints.add(currentLocation);
+                        waypoints.add(destination);
+                        
+                        Road road = roadManager.getRoad(waypoints);
+                        
+                        if (getActivity() != null && isAdded()) {
+                            getActivity().runOnUiThread(() -> {
+                                if (road != null && road.mLength > 0 && isAdded()) {
+                                    String distanceText = String.format("📍 Distance: %.1f km (~%.0f min)", 
+                                        road.mLength, road.mDuration / 60);
+                                    distanceTextView.setText(distanceText);
+                                    distanceTextView.setVisibility(View.VISIBLE);
+                                }
+                            });
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error calculating route distance", e);
+                    }
+                }).start();
+            }
+        });
     }
 }
