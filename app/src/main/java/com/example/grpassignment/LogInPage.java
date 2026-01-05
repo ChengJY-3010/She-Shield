@@ -46,7 +46,7 @@ public class LogInPage extends AppCompatActivity {
     private TextView tvForgotPassword, tvSignUp;
 
     // Firebase and Google Client Variables
-    private FirebaseAuth mAuth; // This resolves the 'auth' error
+    private FirebaseAuth mAuth;
     private GoogleSignInClient mGoogleSignInClient;
 
     @Override
@@ -70,7 +70,7 @@ public class LogInPage extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // Check if user is already signed in (Resolves getCurrentUser error)
+        // Check if user is already signed in; if so, skip login
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             navigateToMainActivity(currentUser);
@@ -100,28 +100,31 @@ public class LogInPage extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        // Standard Login
+        // Standard Email/Password Login
         btnLogin.setOnClickListener(v -> attemptStandardLogin());
 
-        // Google Sign-In
+        // Google Sign-In Button
         btnGoogleLogin.setOnClickListener(v -> {
             Intent signInIntent = mGoogleSignInClient.getSignInIntent();
             startActivityForResult(signInIntent, RC_SIGN_IN);
         });
 
-        // Navigation placeholders
-        tvSignUp.setOnClickListener(v ->
-                Toast.makeText(this, "Opening Sign Up Page...", Toast.LENGTH_SHORT).show());
+        // FIXED: Navigate to SignUpActivity
+        tvSignUp.setOnClickListener(v -> {
+            Intent intent = new Intent(LogInPage.this, SignUpActivity.class);
+            startActivity(intent);
+        });
 
+        // Placeholder for Forgot Password (could lead to a ResetPasswordActivity)
         tvForgotPassword.setOnClickListener(v ->
-                Toast.makeText(this, "Opening Password Reset...", Toast.LENGTH_SHORT).show());
+                Toast.makeText(this, "Reset link sent to your email (Demo)", Toast.LENGTH_SHORT).show());
     }
 
     private void attemptStandardLogin() {
         String email = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        // Error handling for empty fields (Resolves validation errors)
+        // Basic Validation
         if (email.isEmpty()) {
             tilUsername.setError("Email is required");
             return;
@@ -136,7 +139,7 @@ public class LogInPage extends AppCompatActivity {
             tilPassword.setError(null);
         }
 
-        // Firebase Sign-In with Email (Resolves signInWithEmailAndPassword error)
+        // Firebase Sign-In with Email
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
@@ -152,9 +155,11 @@ public class LogInPage extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
+                // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 if (account != null) {
                     firebaseAuthWithGoogle(account.getIdToken());
@@ -178,16 +183,20 @@ public class LogInPage extends AppCompatActivity {
                 });
     }
 
-    // This resolves the 'navigateToMainActivity' missing method error
+    /**
+     * Redirects the user to the HomeActivity after successful authentication.
+     */
     private void navigateToMainActivity(FirebaseUser user) {
         if (user != null) {
             String name = user.getDisplayName() != null ? user.getDisplayName() : user.getEmail();
             Toast.makeText(this, "Welcome to She-Shield, " + name, Toast.LENGTH_SHORT).show();
 
-            // TODO: Uncomment these lines once your MainActivity is created
-            // Intent intent = new Intent(LogInPage.this, MainActivity.class);
-            // startActivity(intent);
-            // finish();
+            // Direct navigation to HomeActivity
+            Intent intent = new Intent(LogInPage.this, HomeActivity.class);
+            // Flags ensure that pressing 'Back' doesn't return the user to the login screen
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
         }
     }
 }
