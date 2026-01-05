@@ -1,10 +1,11 @@
 package com.example.grpassignment;
 
+import com.example.grpassignment.R;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,17 +40,17 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        // Initialize Firebase Auth
+        // 1. Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
-        // Initialize UI Views
+        // 2. Initialize UI Views
         initializeUI();
 
-        // Set Up Click Listeners
+        // 3. Set Up Click Listeners
         btnRegister.setOnClickListener(v -> handleRegistration());
 
         tvBackToLogin.setOnClickListener(v -> {
-            // Simply finish this activity to return to the previous Login screen
+            // Return to the previous Login screen
             finish();
         });
     }
@@ -75,7 +76,7 @@ public class SignUpActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
-        // 1. Validation Logic
+        // 1. Form Validation
         if (TextUtils.isEmpty(fullName)) {
             tilFullName.setError("Full name is required");
             return;
@@ -103,12 +104,14 @@ public class SignUpActivity extends AppCompatActivity {
                         Log.d(TAG, "createUserWithEmail:success");
                         FirebaseUser user = mAuth.getCurrentUser();
 
-                        // 3. Update User Profile with Full Name
+                        // 3. Update User Profile with Display Name
                         updateUserProfile(user, fullName);
                     } else {
                         Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                        String errorMessage = task.getException() != null ?
+                                task.getException().getMessage() : "Unknown error";
                         Toast.makeText(SignUpActivity.this, "Authentication failed: " +
-                                task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                errorMessage, Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -124,9 +127,14 @@ public class SignUpActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             Toast.makeText(SignUpActivity.this, "Account created successfully!", Toast.LENGTH_SHORT).show();
 
-                            // Navigate to Home/Main Activity
+                            // 4. Navigate to Home/Main Activity and clear backstack
                             Intent intent = new Intent(SignUpActivity.this, HomeActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            // Even if profile update fails, account is created, so navigate home
+                            Intent intent = new Intent(SignUpActivity.this, HomeActivity.class);
                             startActivity(intent);
                             finish();
                         }
