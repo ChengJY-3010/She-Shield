@@ -73,8 +73,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-auth")
 
-    // 3. Google Sign-In
-    implementation("com.google.android.gms:play-services-auth:21.3.0")
+    // 3. Google Sign-In (Removed)
     implementation(libs.play.services.location)
     implementation(libs.firebase.firestore)
 
