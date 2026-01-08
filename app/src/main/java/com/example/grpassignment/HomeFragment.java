@@ -164,8 +164,7 @@ public class HomeFragment extends Fragment {
         }
 
         sharePostButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), PostReportActivity.class);
-            startActivity(intent);
+            Navigation.findNavController(v).navigate(R.id.action_nav_home_to_postReport);
         });
 
         sosButton.setOnClickListener(v -> {
