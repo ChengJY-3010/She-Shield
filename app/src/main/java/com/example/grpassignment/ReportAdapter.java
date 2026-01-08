@@ -3,6 +3,7 @@ package com.example.grpassignment;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,15 +59,9 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportView
 
         // Handle "View Details" click
         holder.btnViewDetails.setOnClickListener(v -> {
-            Intent intent = new Intent(context, ReportDetailActivity.class);
-            intent.putExtra("report", report); // Pass the report object
-
-            // Grant permission to the new activity to read the URI
-            if (report.getMediaUri() != null) {
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            }
-
-            context.startActivity(intent);
+            Bundle args = new Bundle();
+            args.putSerializable("report", report);
+            androidx.navigation.Navigation.findNavController(v).navigate(R.id.action_nav_report_to_reportDetail, args);
         });
     }
 

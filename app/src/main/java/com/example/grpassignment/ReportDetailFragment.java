@@ -5,49 +5,52 @@ import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
-import com.bumptech.glide.Glide; // Import Glide
+import com.bumptech.glide.Glide;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-public class ReportDetailActivity extends AppCompatActivity {
+public class ReportDetailFragment extends Fragment {
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_report_detail, container, false);
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_report_detail);
-
-        // --- Setup Toolbar ---
-        Toolbar toolbar = findViewById(R.id.toolbar_report_detail);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-        }
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         // Find views
-        ImageView imageView = findViewById(R.id.detail_image_view);
-        VideoView videoView = findViewById(R.id.detail_video_view);
-        TextView noMediaText = findViewById(R.id.no_media_text);
-        TextView incidentType = findViewById(R.id.detail_incident_type);
-        TextView severity = findViewById(R.id.detail_severity);
-        TextView dateTime = findViewById(R.id.detail_date_time);
-        TextView location = findViewById(R.id.detail_location);
-        TextView description = findViewById(R.id.detail_description);
-        TextView anonymousStatus = findViewById(R.id.detail_anonymous_status);
+        ImageView imageView = view.findViewById(R.id.detail_image_view);
+        VideoView videoView = view.findViewById(R.id.detail_video_view);
+        TextView noMediaText = view.findViewById(R.id.no_media_text);
+        TextView incidentType = view.findViewById(R.id.detail_incident_type);
+        TextView severity = view.findViewById(R.id.detail_severity);
+        TextView dateTime = view.findViewById(R.id.detail_date_time);
+        TextView location = view.findViewById(R.id.detail_location);
+        TextView description = view.findViewById(R.id.detail_description);
+        TextView anonymousStatus = view.findViewById(R.id.detail_anonymous_status);
 
-        // Get data from intent
-        Report report = (Report) getIntent().getSerializableExtra("report");
+        // Get data from arguments
+        Report report = null;
+        if (getArguments() != null) {
+            report = (Report) getArguments().getSerializable("report");
+        }
 
         if (report != null) {
             incidentType.setText("Incident Type: " + report.getType());
@@ -73,7 +76,7 @@ public class ReportDetailActivity extends AppCompatActivity {
                     imageView.setVisibility(View.GONE);
                     videoView.setVisibility(View.VISIBLE);
                     videoView.setVideoURI(Uri.parse(mediaUriString));
-                    MediaController mediaController = new MediaController(this);
+                    MediaController mediaController = new MediaController(requireContext());
                     mediaController.setAnchorView(videoView);
                     videoView.setMediaController(mediaController);
                 } else {
@@ -96,10 +99,10 @@ public class ReportDetailActivity extends AppCompatActivity {
             return;
         }
 
-        // Geocoding should be done on a background thread in a real app
+        // Geocoding should be done on a background thread
         new Thread(() -> {
             try {
-                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
                 String[] latLng = locationString.split(",");
                 double latitude = Double.parseDouble(latLng[0]);
                 double longitude = Double.parseDouble(latLng[1]);
@@ -109,20 +112,20 @@ public class ReportDetailActivity extends AppCompatActivity {
                 if (addresses != null && !addresses.isEmpty()) {
                     Address address = addresses.get(0);
                     String addressLine = address.getAddressLine(0);
-                    runOnUiThread(() -> locationView.setText("Location: " + addressLine));
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> locationView.setText("Location: " + addressLine));
+                    }
                 } else {
-                    runOnUiThread(() -> locationView.setText("Location: " + locationString));
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> locationView.setText("Location: " + locationString));
+                    }
                 }
             } catch (IOException | NumberFormatException | IndexOutOfBoundsException e) {
-                Log.e("ReportDetailActivity", "Error geocoding location", e);
-                runOnUiThread(() -> locationView.setText("Location: " + locationString)); // Fallback
+                Log.e("ReportDetailFragment", "Error geocoding location", e);
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> locationView.setText("Location: " + locationString));
+                }
             }
         }).start();
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed(); // This will take you back to the previous screen
-        return true;
     }
 }

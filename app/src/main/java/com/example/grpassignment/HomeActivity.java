@@ -67,7 +67,7 @@ public class HomeActivity extends AppCompatActivity {
         // 5. Hide bottom navigation for specific fragments
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             int destId = destination.getId();
-            if (destId == R.id.fullScreenMapFragment || destId == R.id.safetyZoneDetailFragment || destId == R.id.safetyResourceDetailFragment || destId == R.id.registrationFragment || destId == R.id.postReportFragment) {
+            if (destId == R.id.fullScreenMapFragment || destId == R.id.safetyZoneDetailFragment || destId == R.id.safetyResourceDetailFragment || destId == R.id.registrationFragment || destId == R.id.postReportFragment || destId == R.id.reportDetailFragment) {
                 bottomNav.setVisibility(android.view.View.GONE);
             } else {
                 bottomNav.setVisibility(android.view.View.VISIBLE);

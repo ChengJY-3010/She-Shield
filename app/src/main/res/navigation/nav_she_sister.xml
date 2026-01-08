@@ -43,6 +43,9 @@
         <action
             android:id="@+id/action_nav_report_to_postReport"
             app:destination="@id/postReportFragment" />
+        <action
+            android:id="@+id/action_nav_report_to_reportDetail"
+            app:destination="@id/reportDetailFragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_resources"
@@ -115,5 +118,15 @@
             android:name="longitude"
             android:defaultValue="0.0"
             app:argType="float" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/reportDetailFragment"
+        android:name="com.example.grpassignment.ReportDetailFragment"
+        android:label="Report Details"
+        tools:layout="@layout/fragment_report_detail">
+        <argument
+            android:name="report"
+            app:argType="com.example.grpassignment.Report" />
     </fragment>
 </navigation>
